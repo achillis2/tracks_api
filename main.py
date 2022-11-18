@@ -9,6 +9,9 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
+from sqlmodel import Session, select
+from database import TrackModel, engine
+
 from models import Track
 
 # https://www.bugbytes.io/posts/creating-a-music-track-api-with-fastapi-in-python/
@@ -161,10 +164,23 @@ data = []
 @app.on_event("startup")
 async def startup_event():
     DATAFILE = pathlib.Path() / 'data' / 'tracks.json'
-    with open(DATAFILE, 'r') as f:
-        tracks = json.load(f)
-        for track in tracks:
-            data.append(Track(**track).dict())
+    # create a Session scoped to the startup event
+    # Note: we can also use a context manager
+    session = Session(engine)
+
+    # check if the database is already populated
+    stmt = select(TrackModel)
+    result = session.exec(stmt).first()
+
+    # Load data if there's no results
+    if result is None:
+        with open(DATAFILE, 'r') as f:
+            tracks = json.load(f)
+            for track in tracks:
+                session.add(TrackModel(**track))
+    
+        session.commit()
+    session.close()
 
 
 @app.get('/tracks/', response_model=List[Track])

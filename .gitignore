@@ -9,3 +9,4 @@ credentials
 .env
 media/
 *.xlsx
+*.sqlite3
