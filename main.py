@@ -2,12 +2,17 @@ import json
 import pathlib
 from typing import List, Union
 
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, Depends
+from fastapi.security import OAuth2PasswordBearer
 
 from models import Track
 
+# https://www.bugbytes.io/posts/creating-a-music-track-api-with-fastapi-in-python/
+
 # instantiate the FastAPI app
 app = FastAPI()
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # create container for our data - to be loaded at app startup.
 data = []
@@ -23,8 +28,8 @@ async def startup_event():
 
 
 @app.get('/tracks/', response_model=List[Track])
-def tracks():
-    return data
+def tracks(token: str = Depends(oauth2_scheme)):
+    return {"token": token, "data": data}
 
 
 @app.get('/tracks/{track_id}/', response_model=Union[Track, str])
