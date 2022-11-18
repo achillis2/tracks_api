@@ -1,0 +1,11 @@
+*.pyc
+Thumbs.db
+staticfiles
+log/*.log
+credentials
+*~
+.idea/
+*.bak
+.env
+media/
+*.xlsx
